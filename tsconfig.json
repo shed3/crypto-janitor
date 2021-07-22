@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "lib": ["es6", "dom"],
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2019",
+  },
+  "compileOnSave": true,
+  "include": [
+    "src",
+  ],
+}
