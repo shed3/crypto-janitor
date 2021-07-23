@@ -1,4 +1,3 @@
-import { describe, it, before } from "mocha";
 import { Etherscan } from "../targets";
 import {
   getCcxtConnectionWithdrawals,
@@ -13,23 +12,23 @@ describe("Etherscan", () => {
   const apiKey: string = process.env.ETHERSCAN_API_KEY || "";
   const connection = new Etherscan(address, apiKey);
 
-  before(async () => {
+  beforeAll(async () => {
     await connection.initialize();
   });
 
-  it("#getWithdrawals", async function () {
+  it("#getWithdrawals", async () => {
     await getCcxtConnectionWithdrawals(connection);
   });
 
-  it("#getDeposits", async function () {
+  it("#getDeposits", async () => {
     await getCcxtConnectionDeposits(connection);
   });
 
-  it("#getOrders", async function () {
+  it("#getOrders", async () => {
     await getCcxtConnectionOrders(connection);
   });
 
-  it("#getAllTransaction - since 03/20/2021", async function () {
+  it("#getAllTransaction - since 03/20/2021", async () => {
     const since = new Date("2021-03-20");
     await getAllTransactionsSince(connection, since.getTime());
   });

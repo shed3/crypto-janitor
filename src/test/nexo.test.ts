@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import { describe, it, before } from "mocha";
 import { Nexo } from "../targets";
 import {
   getCcxtConnectionWithdrawals,
@@ -10,19 +9,19 @@ import {
 describe.skip("Nexo", () => {
   const connection = new Nexo("nexo_transactions (5).csv");
 
-  before(async () => {
+  beforeAll(async () => {
     await connection.initialize();
   });
 
-  it("#getWithdrawals", async function () {
+  it("#getWithdrawals", async () => {
     await getCcxtConnectionWithdrawals(connection);
   });
 
-  it("#getDeposits", async function () {
+  it("#getDeposits", async () => {
     await getCcxtConnectionDeposits(connection);
   });
 
-  it("#getOrders", async function () {
+  it("#getOrders", async () => {
     await getCcxtConnectionOrders(connection);
   });
 });
