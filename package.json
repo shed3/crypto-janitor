@@ -13,6 +13,18 @@
     "url": "https://github.com/rileystephens28/crypto-janitor/issues"
   },
   "homepage": "https://github.com/rileystephens28/crypto-janitor#readme",
+  "keywords": [
+    "crypto",
+    "cyrptocurrency",
+    "crypto-janitor",
+    "crypto transactions",
+    "cyrptocurrency-transactions",
+    "cyrptocurrency transactions",
+    "crypto account",
+    "cyrptocurrency-account",
+    "cyrptocurrency account",
+    "easy crypto"
+  ],
   "scripts": {
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",
