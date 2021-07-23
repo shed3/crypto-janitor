@@ -1,4 +1,7 @@
 /* eslint-disable max-len */
+import * as Papa from "papaparse";
+import * as path from "path";
+import * as fs from "fs";
 import { Nexo } from "../targets";
 import {
   getCcxtConnectionWithdrawals,
@@ -6,8 +9,15 @@ import {
   getCcxtConnectionOrders,
 } from "./utils";
 
-describe.skip("Nexo", () => {
-  const connection = new Nexo("nexo_transactions (5).csv");
+describe("Nexo", () => {
+  const loadFileContents = (fileName: string) => {
+    const filePath: string = path.join(path.resolve(__dirname), `fixtures/${fileName}`);
+    const file: Buffer = fs.readFileSync(filePath);
+    const csvData: string = file.toString();
+    const results: Papa.ParseResult<unknown> = Papa.parse(csvData, { header: true });
+    return results.data;
+  }
+  const connection = new Nexo("test.csv", loadFileContents);
 
   beforeAll(async () => {
     await connection.initialize();

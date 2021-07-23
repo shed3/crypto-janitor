@@ -1,4 +1,4 @@
-import BaseConnection, { Transaction, Order } from "./base";
+import BaseConnection from "./base";
 
 
 /**
@@ -62,7 +62,6 @@ export default class CsvConnection extends BaseConnection {
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
       this.rawTransactions = await this.loadFileContents(this.fileName);
-      this.rawTransactions = [];
       this.initialized = true;
     }
   }

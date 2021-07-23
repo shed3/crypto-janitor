@@ -39,9 +39,10 @@ export default class Nexo extends CsvConnection {
   /**
    * @description Create Nexo instance
    * @param {string} fileName - CVS file with transactions
+   * @param {(fileName: string) => Array<any>} loadFileContents - Method used to load csv contents from filename
    */
-  constructor(fileName: string) {
-    super("nexo", fileName);
+  constructor(fileName: string, loadFileContents: (fileName: string) => Array<any>) {
+    super("nexo", fileName, loadFileContents);
   }
 
   /**
