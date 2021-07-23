@@ -7,10 +7,14 @@
     "outDir": "lib",
     "rootDir": "./src",
     "sourceMap": true,
+    "declaration": true,
     "strict": true,
     "target": "es2019",
   },
   "compileOnSave": true,
+  "exclude": [
+    "src/test",
+  ],
   "include": [
     "src",
   ],

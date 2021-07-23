@@ -1,6 +1,8 @@
-require('dotenv').config()
+require("dotenv").config();
 
 import {
+  Transaction,
+  Order,
   BaseConnection,
   CcxtConnection,
   CsvConnection,
@@ -16,6 +18,7 @@ import {
   Nexo,
 } from "./targets";
 
+// Export Connections
 export {
   Bittrex,
   Celsius,
@@ -28,6 +31,9 @@ export {
   CcxtConnection,
   CsvConnection,
 };
+
+// Export Types
+export { Transaction, Order };
 
 /**
  * @description Return initialized connection instance
@@ -83,14 +89,15 @@ export const resolveConnection = async (
     }
     switch (params.chain) {
       case "ethereum":
-        const partnerKey: string = process.env.CELSIUS_PARTNER_KEY || "";
-        connection = new Etherscan(params.address, partnerKey);
+        connection = new Etherscan(params.address, params.apiKey);
         break;
       default:
         break;
     }
     if (connection === null) {
-      return { error: `Connecting to ${params.chain} via ledger is not yet supported.` };
+      return {
+        error: `Connecting to ${params.chain} via ledger is not yet supported.`,
+      };
     }
   } else if (type === "csv") {
     if (params.fileName === undefined) {
@@ -98,7 +105,7 @@ export const resolveConnection = async (
     }
     switch (name) {
       case "nexo":
-        connection = new Nexo(params.fileName);
+        connection = new Nexo(params.fileName, params.loadFileContents);
         break;
       default:
         break;
