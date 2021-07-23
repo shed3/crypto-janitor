@@ -1,6 +1,6 @@
 // Send, Receive, Deposit, Withdrawal, Income
 export interface Transaction {
-  id: string,
+  id: string;
   timestamp: Date;
   type: string;
   baseCurrency: string;
@@ -16,7 +16,7 @@ export interface Transaction {
 
 // Buy, Sell
 export interface Order {
-  id: string,
+  id: string;
   timestamp: Date;
   type: string;
   baseCurrency: string;
@@ -62,13 +62,15 @@ export default class BaseConnection {
     this.initialized = false;
     this.symbols = [];
     this.requireSymbols = params.requireSymbols ? params.requireSymbols : false;
-    this.requireUsdValuation = params.requireUsdValuation ? params.requireUsdValuation : true;
+    this.requireUsdValuation = params.requireUsdValuation
+      ? params.requireUsdValuation
+      : true;
   }
 
   /**
-    * JSON object representing connection
-    * @return {any}
-    */
+   * JSON object representing connection
+   * @return {any}
+   */
   toJSON(): any {
     const baseJSON = {
       name: this.name,
@@ -84,11 +86,13 @@ export default class BaseConnection {
   }
 
   /**
-    * Initialize exchange by fetching balances and loading markets
-    * @return {void}
-    */
+   * Initialize exchange by fetching balances and loading markets
+   * @return {void}
+   */
   initialize(): void {
-    throw Error(`NotImplementedError: ${this.name}.initialize() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.initialize() has not been implemented.`
+    );
   }
 
   /**
@@ -96,7 +100,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getBalances(): void {
-    throw Error(`NotImplementedError: ${this.name}.getBalances() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getBalances() has not been implemented.`
+    );
   }
 
   /**
@@ -104,7 +110,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getWithdrawals(): void {
-    throw Error(`NotImplementedError: ${this.name}.getWithdrawals() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getWithdrawals() has not been implemented.`
+    );
   }
 
   /**
@@ -112,7 +120,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getDeposits(): void {
-    throw Error(`NotImplementedError: ${this.name}.getDeposits() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getDeposits() has not been implemented.`
+    );
   }
 
   /**
@@ -120,7 +130,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getOrders(): void {
-    throw Error(`NotImplementedError: ${this.name}.getOrders() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getOrders() has not been implemented.`
+    );
   }
 
   /**
@@ -128,7 +140,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getLedger(): void {
-    throw Error(`NotImplementedError: ${this.name}.getLedger() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getLedger() has not been implemented.`
+    );
   }
 
   /**
@@ -136,7 +150,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getTransactions(): void {
-    throw Error(`NotImplementedError: ${this.name}.getTransactions() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getTransactions() has not been implemented.`
+    );
   }
 
   /**
@@ -144,7 +160,9 @@ export default class BaseConnection {
    * @return {void}
    */
   getAllTransactions(): void {
-    throw Error(`NotImplementedError: ${this.name}.getAllTransactions() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getAllTransactions() has not been implemented.`
+    );
   }
 
   /**
@@ -152,7 +170,8 @@ export default class BaseConnection {
    * @return {void}
    */
   getTxUsdVal(): void {
-    throw Error(`NotImplementedError: ${this.name}.getTxUsdVal() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}.getTxUsdVal() has not been implemented.`
+    );
   }
 }
-

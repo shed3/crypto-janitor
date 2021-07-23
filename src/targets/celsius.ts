@@ -77,7 +77,7 @@ export default class CelsiusConnection extends BaseConnection {
    */
   async getBalances(): Promise<any> {
     const balances: any = await this.connection.getBalanceSummary(
-      this.credentials.apiKey,
+      this.credentials.apiKey
     );
     const totals: any = {};
     Object.entries(balances.balance).forEach(([key, val]) => {
@@ -105,7 +105,7 @@ export default class CelsiusConnection extends BaseConnection {
   async filterTransactions(
     type?: string,
     symbol?: string,
-    since?: number,
+    since?: number
   ): Promise<Array<any>> {
     let transactions: Array<Transaction> = [];
     if (this.transactions.length > 0) {
@@ -116,17 +116,17 @@ export default class CelsiusConnection extends BaseConnection {
     let filteredTransactions: Array<Transaction> = transactions;
     if (type) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: Transaction) => transaction.type === type,
+        (transaction: Transaction) => transaction.type === type
       );
     }
     if (symbol) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: Transaction) => transaction.baseCurrency === symbol,
+        (transaction: Transaction) => transaction.baseCurrency === symbol
       );
     }
     if (since) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: Transaction) => transaction.timestamp.getTime() > since,
+        (transaction: Transaction) => transaction.timestamp.getTime() > since
       );
     }
     return filteredTransactions;
@@ -162,7 +162,7 @@ export default class CelsiusConnection extends BaseConnection {
   async getTransactions(symbol?: string, since?: number): Promise<any> {
     const initialPage = await this.connection.getTransactionSummary(
       { page: 1, perPage: 20 },
-      this.credentials.apiKey,
+      this.credentials.apiKey
     );
     const numPages: number = initialPage.pagination.pages;
     let currentPage: number = 2;
@@ -171,7 +171,7 @@ export default class CelsiusConnection extends BaseConnection {
       try {
         const newPage = this.connection.getTransactionSummary(
           { page: currentPage, perPage: 20 },
-          this.credentials.apiKey,
+          this.credentials.apiKey
         );
         allPages.push(newPage);
         currentPage = currentPage + 1;
@@ -191,12 +191,12 @@ export default class CelsiusConnection extends BaseConnection {
     let filteredTransactions: Array<any> = results;
     if (symbol) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: any) => transaction.baseCurrency === symbol,
+        (transaction: any) => transaction.baseCurrency === symbol
       );
     }
     if (since) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: any) => transaction.timestamp.getTime() > since,
+        (transaction: any) => transaction.timestamp.getTime() > since
       );
     }
     return filteredTransactions;

@@ -1,6 +1,5 @@
 import BaseConnection from "./base";
 
-
 /**
  * @description A Generic CSV Implementation of BaseConnection
  */
@@ -16,7 +15,11 @@ export default class CsvConnection extends BaseConnection {
    * @param {string} fileName - CVS file with transactions
    * @param {(fileName: string) => Array<any>} loadFileContents - Method used to load csv contents from filename
    */
-  constructor(name: string, fileName: string, loadFileContents: (fileName: string) => Array<any>) {
+  constructor(
+    name: string,
+    fileName: string,
+    loadFileContents: (fileName: string) => Array<any>
+  ) {
     super(name, "csv", { requireSymbols: false });
     this.fileName = fileName;
     this.loadFileContents = loadFileContents;
@@ -25,10 +28,10 @@ export default class CsvConnection extends BaseConnection {
   }
 
   /**
-    * JSON object representing connection
-    * @override BaseConnection.toJSON
-    * @return {any}
-    */
+   * JSON object representing connection
+   * @override BaseConnection.toJSON
+   * @return {any}
+   */
   toJSON(): any {
     const newJSON = super.toJSON();
     const updatedParams: any = newJSON.params;
@@ -42,7 +45,9 @@ export default class CsvConnection extends BaseConnection {
    * @return {void}
    */
   _formatTransactions(): void {
-    throw Error(`NotImplementedError: ${this.name}._formatTransactions() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}._formatTransactions() has not been implemented.`
+    );
   }
 
   /**
@@ -50,15 +55,17 @@ export default class CsvConnection extends BaseConnection {
    * @return {void}
    */
   _formatOrders(): void {
-    throw Error(`NotImplementedError: ${this.name}._formatOrders() has not been implemented.`);
+    throw Error(
+      `NotImplementedError: ${this.name}._formatOrders() has not been implemented.`
+    );
   }
 
   /**
-    * @description Download csv for storage bucket
-    * @override BaseConnection.initialize
-    * @param {boolean} forceReload - (Optional) Additional paramaters
-    * @return {Promise<void>}
-    */
+   * @description Download csv for storage bucket
+   * @override BaseConnection.initialize
+   * @param {boolean} forceReload - (Optional) Additional paramaters
+   * @return {Promise<void>}
+   */
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
       this.rawTransactions = await this.loadFileContents(this.fileName);

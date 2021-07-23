@@ -6,12 +6,4 @@ import Kucoin from "./kucoin";
 import Etherscan from "./etherscan";
 import Nexo from "./nexo";
 
-export {
-  Bittrex,
-  Celsius,
-  Coinbase,
-  CoinbasePro,
-  Etherscan,
-  Kucoin,
-  Nexo,
-};
+export { Bittrex, Celsius, Coinbase, CoinbasePro, Etherscan, Kucoin, Nexo };

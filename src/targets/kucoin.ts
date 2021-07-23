@@ -23,8 +23,14 @@ export default class Kucoin extends CcxtConnection {
    * @return {Transaction} Formatted transaction
    */
   _formatTransaction(transaction: any, forceType?: string): Transaction {
-    const formattedTx: Transaction = super._formatTransaction(transaction, forceType);
-    formattedTx.id = formattedTx.type !== "receive" ? formattedTx.id : transaction.info.walletTxId;
+    const formattedTx: Transaction = super._formatTransaction(
+      transaction,
+      forceType
+    );
+    formattedTx.id =
+      formattedTx.type !== "receive"
+        ? formattedTx.id
+        : transaction.info.walletTxId;
     return formattedTx;
   }
 
@@ -38,7 +44,9 @@ export default class Kucoin extends CcxtConnection {
   async getOrders(symbol?: string, since?: number): Promise<any> {
     const allTransactions: Array<any> = [];
     const now: number = this.connection.milliseconds();
-    let fetchTime: number = since ? since : this.connection.parse8601("2021-01-01T00:00:00Z");
+    let fetchTime: number = since
+      ? since
+      : this.connection.parse8601("2021-01-01T00:00:00Z");
     while (fetchTime <= now) {
       try {
         const trades = super.getOrders(symbol, fetchTime, 200);

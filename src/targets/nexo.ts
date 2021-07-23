@@ -41,7 +41,10 @@ export default class Nexo extends CsvConnection {
    * @param {string} fileName - CVS file with transactions
    * @param {(fileName: string) => Array<any>} loadFileContents - Method used to load csv contents from filename
    */
-  constructor(fileName: string, loadFileContents: (fileName: string) => Array<any>) {
+  constructor(
+    fileName: string,
+    loadFileContents: (fileName: string) => Array<any>
+  ) {
     super("nexo", fileName, loadFileContents);
   }
 
@@ -56,7 +59,8 @@ export default class Nexo extends CsvConnection {
   _formatTransaction(transaction: any): Transaction {
     let type: string;
     if (transaction.Type === "Interest") {
-      type = transaction.Amount > 0 ? "interest-in-account" : "interest-out-loan";
+      type =
+        transaction.Amount > 0 ? "interest-in-account" : "interest-out-loan";
     } else {
       type = this.transactionTypes[transaction.Type];
     }
@@ -149,16 +153,20 @@ export default class Nexo extends CsvConnection {
   }
 
   /**
-    * @description Download csv and clean transactions
-    * @override CsvConnection.initialize
-    * @param {boolean} forceReload - (Optional) Additional paramaters
-    * @return {Promise<void>}
-    */
+   * @description Download csv and clean transactions
+   * @override CsvConnection.initialize
+   * @param {boolean} forceReload - (Optional) Additional paramaters
+   * @return {Promise<void>}
+   */
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
       await super.initialize(forceReload);
-      const transactions = this.rawTransactions.filter((x: any) => x.Type !== "Exchange").map((x: any) => this._formatTransaction(x));
-      const orders = this.rawTransactions.filter((x: any) => x.Type === "Exchange").map((x: any) => this._formatOrder(x));
+      const transactions = this.rawTransactions
+        .filter((x: any) => x.Type !== "Exchange")
+        .map((x: any) => this._formatTransaction(x));
+      const orders = this.rawTransactions
+        .filter((x: any) => x.Type === "Exchange")
+        .map((x: any) => this._formatOrder(x));
       this.transactions = _.sortBy(transactions.concat(orders), "timestamp");
       this.initialized = true;
     }

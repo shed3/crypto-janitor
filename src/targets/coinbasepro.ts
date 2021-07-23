@@ -10,6 +10,10 @@ export default class CoinbasePro extends CcxtConnection {
    * @param {any} creds - Coinbase Pro API creds
    */
   constructor(creds: any) {
-    super("coinbasepro", creds, { rateLimit: 200, requireSymbols: false, requireUsdValuation: true });
+    super("coinbasepro", creds, {
+      rateLimit: 200,
+      requireSymbols: false,
+      requireUsdValuation: true,
+    });
   }
 }

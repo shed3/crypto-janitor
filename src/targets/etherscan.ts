@@ -41,22 +41,25 @@ export default class Etherscan extends BaseConnection {
     this.transactions = [];
     this.rawTransactions = [];
     this.fallbackDataSources = Object.keys(this.availableDataSources);
-    this.currentDataSource = new ccxtConnection(marketDataSource ? marketDataSource : this.fallbackDataSources[0]);
-    this.client = etherscan.init(apiKey)
+    this.currentDataSource = new ccxtConnection(
+      marketDataSource ? marketDataSource : this.fallbackDataSources[0]
+    );
+    this.client = etherscan.init(apiKey);
   }
 
   /**
-    * @description JSON object representing connection
-    * @override BaseConnection.toJSON
-    * @return {any}
-    */
+   * @description JSON object representing connection
+   * @override BaseConnection.toJSON
+   * @return {any}
+   */
   toJSON(): any {
     const newJSON = super.toJSON();
     const updatedParams: any = newJSON.params;
     updatedParams.address = this.address;
     updatedParams.chain = "ethereum";
     newJSON.params = updatedParams;
-    newJSON.name = `Ethereum Address (${this.address.slice(0, 6)}...${this.address.slice(-4)})`;
+    newJSON.name = `Ethereum Address (
+      ${this.address.slice(0, 6)}...${this.address.slice(-4)})`;
     return newJSON;
   }
 
@@ -80,14 +83,24 @@ export default class Etherscan extends BaseConnection {
       exclude.push(this.currentDataSource.name);
     }
 
-    const fallbacks: Array<string> = this.fallbackDataSources.filter((src: string) => !exclude.includes(src));
+    const fallbacks: Array<string> = this.fallbackDataSources.filter(
+      (src: string) => !exclude.includes(src)
+    );
     for (let x = 0; x < fallbacks.length; x++) {
       attempted.push(fallbacks[x]);
       await this.availableDataSources[fallbacks[x]].initialize();
-      if (this.availableDataSources[fallbacks[x]].getQuoteConversion(symbol).length > 0) {
-        return { dataSource: this.availableDataSources[fallbacks[x]], attempted };
+      if (
+        this.availableDataSources[fallbacks[x]].getQuoteConversion(symbol)
+          .length > 0
+      ) {
+        return {
+          dataSource: this.availableDataSources[fallbacks[x]],
+          attempted,
+        };
       } else {
-        console.log(`MARKET NOT FOUND: Could not find ${symbol} on ${fallbacks[x]}.`);
+        console.log(
+          `MARKET NOT FOUND: Could not find ${symbol} on ${fallbacks[x]}.`
+        );
       }
     }
     return { dataSource: null, attempted };
@@ -114,7 +127,9 @@ export default class Etherscan extends BaseConnection {
       baseQuantity: 0,
       baseUsdPrice: 0,
       feeCurrency: "ETH",
-      feeQuantity: web3.utils.toBN(entryGroup[0].gasUsed) * web3.utils.fromWei(entryGroup[0].gasPrice),
+      feeQuantity:
+        web3.utils.toBN(entryGroup[0].gasUsed) *
+        web3.utils.fromWei(entryGroup[0].gasPrice),
       feePrice: 0,
       feeTotal: 0,
       subTotal: 0,
@@ -131,10 +146,18 @@ export default class Etherscan extends BaseConnection {
       } else if (value > 0) {
         // Could be sending/receiving eth or receiving a token
         formattedTx.type = tx.from === this.address ? "send" : "receive";
-        formattedTx.feeCurrency = formattedTx.type === "receive" ? "USD" : formattedTx.feeCurrency;
-        formattedTx.feeQuantity = formattedTx.type === "receive" ? 0 : formattedTx.feeQuantity;
-        formattedTx.baseCurrency = tx.hasOwnProperty("tokenSymbol") ? tx.tokenSymbol : "ETH";
-        formattedTx.baseQuantity = web3.utils.fromWei(tx.value, tx.tokenDecimal === "6" ? "picoether" : "ether") * 1;
+        formattedTx.feeCurrency =
+          formattedTx.type === "receive" ? "USD" : formattedTx.feeCurrency;
+        formattedTx.feeQuantity =
+          formattedTx.type === "receive" ? 0 : formattedTx.feeQuantity;
+        formattedTx.baseCurrency = tx.hasOwnProperty("tokenSymbol")
+          ? tx.tokenSymbol
+          : "ETH";
+        formattedTx.baseQuantity =
+          web3.utils.fromWei(
+            tx.value,
+            tx.tokenDecimal === "6" ? "picoether" : "ether"
+          ) * 1;
       }
     } else if (entryGroup.length === 2) {
       // Could be buying/selling token using eth or
@@ -146,13 +169,18 @@ export default class Etherscan extends BaseConnection {
         ethTx = entryGroup[0];
       }
       formattedTx.baseCurrency = tokenTx.tokenSymbol;
-      formattedTx.baseQuantity = web3.utils.fromWei(tokenTx.value, tokenTx.tokenDecimal === "6" ? "picoether" : "ether") * 1;
+      formattedTx.baseQuantity =
+        web3.utils.fromWei(
+          tokenTx.value,
+          tokenTx.tokenDecimal === "6" ? "picoether" : "ether"
+        ) * 1;
       if (ethTx.value > 0) {
         // buy or sell token with eth
         formattedTx.type = ethTx.from === this.address ? "buy" : "sell";
         formattedTx.quoteCurrency = "ETH";
         formattedTx.quoteQuantity = web3.utils.fromWei(ethTx.value) * 1;
-        formattedTx.quotePrice = formattedTx.quoteQuantity / formattedTx.baseQuantity;
+        formattedTx.quotePrice =
+          formattedTx.quoteQuantity / formattedTx.baseQuantity;
       } else {
         // send token and pay gas with eth or claim airdrop token
         formattedTx.type = tokenTx.to === this.address ? "receive" : "send";
@@ -162,13 +190,23 @@ export default class Etherscan extends BaseConnection {
       // buy/sell token using another token with high
       // volume liquidity pool converter (Ex: WBTC, WETH, etc)
       const tokens: any = entryGroup.filter((x: any) => x.tokenSymbol);
-      const tokenFromTx: any = tokens[1].from === this.address ? tokens[1] : tokens[0];
-      const tokenToTx: any = tokens[0].to === this.address ? tokens[0] : tokens[1];
+      const tokenFromTx: any =
+        tokens[1].from === this.address ? tokens[1] : tokens[0];
+      const tokenToTx: any =
+        tokens[0].to === this.address ? tokens[0] : tokens[1];
       formattedTx.type = "buy";
       formattedTx.baseCurrency = tokenToTx.tokenSymbol;
-      formattedTx.baseQuantity = web3.utils.fromWei(tokenToTx.value, tokenToTx.tokenDecimal === "6" ? "picoether" : "ether") * 1;
+      formattedTx.baseQuantity =
+        web3.utils.fromWei(
+          tokenToTx.value,
+          tokenToTx.tokenDecimal === "6" ? "picoether" : "ether"
+        ) * 1;
       formattedTx.quoteCurrency = tokenFromTx.tokenSymbol;
-      formattedTx.quoteQuantity = web3.utils.fromWei(tokenFromTx.value, tokenFromTx.tokenDecimal === "6" ? "picoether" : "ether") * 1;
+      formattedTx.quoteQuantity =
+        web3.utils.fromWei(
+          tokenFromTx.value,
+          tokenFromTx.tokenDecimal === "6" ? "picoether" : "ether"
+        ) * 1;
       // attempted to swap base and quote currencies to refelect a sell to stablecoin or BTC
       if (quoteCoins.includes(tokenToTx.tokenSymbol)) {
         formattedTx.type = "sell";
@@ -179,15 +217,23 @@ export default class Etherscan extends BaseConnection {
         formattedTx.quoteCurrency = tempCurrency;
         formattedTx.quoteQuantity = tempQuantity;
       }
-      formattedTx.quotePrice = formattedTx.quoteQuantity / formattedTx.baseQuantity;
+      formattedTx.quotePrice =
+        formattedTx.quoteQuantity / formattedTx.baseQuantity;
     } else {
-      console.log(`UNPARSABLE TX: Received tx group with ${entryGroup.length}`, entryGroup);
+      console.log(
+        `UNPARSABLE TX: Received tx group with ${entryGroup.length}`,
+        entryGroup
+      );
     }
     if (formattedTx.type === "buy" || formattedTx.type === "sell") {
       // Quote currencies should almost always (fingers crossed) exist on
       // any market so no need to check for existing price data.
-      const market: any = await this.findMarketForQuote(formattedTx.quoteCurrency);
-      const result: Order = await market.dataSource.quoteOrder(formattedTx as Order);
+      const market: any = await this.findMarketForQuote(
+        formattedTx.quoteCurrency
+      );
+      const result: Order = await market.dataSource.quoteOrder(
+        formattedTx as Order
+      );
       return result;
     } else {
       // Must use this loop to make sure a market is found and that market returns a valid
@@ -198,12 +244,23 @@ export default class Etherscan extends BaseConnection {
       while (market.attempted.length < this.fallbackDataSources.length) {
         attempted = _.uniq(attempted.concat(market.attempted));
         if (market.dataSource) {
-          const prices: any = await market.dataSource.getCommonPrices(formattedTx.timestamp, formattedTx.baseCurrency, formattedTx.feeCurrency);
+          const prices: any = await market.dataSource.getCommonPrices(
+            formattedTx.timestamp,
+            formattedTx.baseCurrency,
+            formattedTx.feeCurrency
+          );
           if (prices.baseUsdPrice) {
-            const result: Transaction = await market.dataSource.quoteTransaction(formattedTx as Transaction, prices);
+            const result: Transaction =
+              await market.dataSource.quoteTransaction(
+                formattedTx as Transaction,
+                prices
+              );
             return result;
           }
-          market = await this.findMarketForQuote(formattedTx.baseCurrency, attempted);
+          market = await this.findMarketForQuote(
+            formattedTx.baseCurrency,
+            attempted
+          );
         }
       }
     }
@@ -212,19 +269,29 @@ export default class Etherscan extends BaseConnection {
   }
 
   /**
-    * @description Fetch and clean transactions
-    * @override BaseConnection.initialize
-    * @param {boolean} forceReload - (Optional) Additional paramaters
-    * @return {Promise<void>}
-    */
+   * @description Fetch and clean transactions
+   * @override BaseConnection.initialize
+   * @param {boolean} forceReload - (Optional) Additional paramaters
+   * @return {Promise<void>}
+   */
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
       await this.currentDataSource.initialize();
       const transactions = await Promise.all([
         this.client.account.txlist(this.address, 1, "latest", 1, 100, "asc"),
-        this.client.account.tokentx(this.address, "", 1, "latest", 1, 100, "asc"),
+        this.client.account.tokentx(
+          this.address,
+          "",
+          1,
+          "latest",
+          1,
+          100,
+          "asc"
+        ),
       ]);
-      this.rawTransactions = Object.values(_.groupBy(_.flatten(transactions.map((x: any) => x.result)), "hash"));
+      this.rawTransactions = Object.values(
+        _.groupBy(_.flatten(transactions.map((x: any) => x.result)), "hash")
+      );
       this.initialized = true;
     }
   }
@@ -235,9 +302,14 @@ export default class Etherscan extends BaseConnection {
    * @param {number} since (Optional) Timestamp to get transactions since
    * @return {Promise<Array<any>>} Array of deposit objects
    */
-  async filterTransactions(type?: string | Array<string>, since?: number): Promise<Array<any>> {
+  async filterTransactions(
+    type?: string | Array<string>,
+    since?: number
+  ): Promise<Array<any>> {
     if (this.transactions.length < 1) {
-      const cleanedTxs = this.rawTransactions.map(async (x: any) => await this._parseEntryGroup(x));
+      const cleanedTxs = this.rawTransactions.map(
+        async (x: any) => await this._parseEntryGroup(x)
+      );
       this.transactions = await Promise.all(cleanedTxs);
       this.transactions = _.sortBy(this.transactions, "timestamp");
       // await this.initialize();
@@ -245,13 +317,19 @@ export default class Etherscan extends BaseConnection {
     let filteredTransactions: Array<Transaction> = this.transactions;
     if (type) {
       if (typeof type === "string") {
-        filteredTransactions = filteredTransactions.filter((transaction: Transaction) => transaction.type === type);
+        filteredTransactions = filteredTransactions.filter(
+          (transaction: Transaction) => transaction.type === type
+        );
       } else if (Array.isArray(type)) {
-        filteredTransactions = filteredTransactions.filter((transaction: Transaction) => type.includes(transaction.type));
+        filteredTransactions = filteredTransactions.filter(
+          (transaction: Transaction) => type.includes(transaction.type)
+        );
       }
     }
     if (since) {
-      filteredTransactions = filteredTransactions.filter((transaction: Transaction) => transaction.timestamp.getTime() > since);
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: Transaction) => transaction.timestamp.getTime() > since
+      );
     }
     return filteredTransactions;
   }
