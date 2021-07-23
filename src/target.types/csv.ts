@@ -1,5 +1,4 @@
-import BaseConnection from "./base";
-// import { downloadCSV } from "../../utils";
+import BaseConnection, { Transaction, Order } from "./base";
 
 
 /**
@@ -7,6 +6,7 @@ import BaseConnection from "./base";
  */
 export default class CsvConnection extends BaseConnection {
   fileName: string;
+  loadFileContents: (fileName: string) => Array<any>;
   rawTransactions: Array<any>;
   transactions: Array<any>;
 
@@ -14,10 +14,12 @@ export default class CsvConnection extends BaseConnection {
    * @description Create CSV Connection instance
    * @param {string} name - Name of connection
    * @param {string} fileName - CVS file with transactions
+   * @param {(fileName: string) => Array<any>} loadFileContents - Method used to load csv contents from filename
    */
-  constructor(name: string, fileName: string) {
+  constructor(name: string, fileName: string, loadFileContents: (fileName: string) => Array<any>) {
     super(name, "csv", { requireSymbols: false });
     this.fileName = fileName;
+    this.loadFileContents = loadFileContents;
     this.transactions = [];
     this.rawTransactions = [];
   }
@@ -59,7 +61,7 @@ export default class CsvConnection extends BaseConnection {
     */
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
-      // this.rawTransactions = await downloadCSV(this.fileName);
+      this.rawTransactions = await this.loadFileContents(this.fileName);
       this.rawTransactions = [];
       this.initialized = true;
     }
