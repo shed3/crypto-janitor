@@ -5,9 +5,9 @@ import { sleep } from "../utils";
 import * as _ from "lodash";
 
 interface ExchangeCredentials {
-  apiKey: string,
-  secret: string,
-  password?: string
+  apiKey: string;
+  secret: string;
+  password?: string;
 }
 
 /**
@@ -18,7 +18,11 @@ interface ExchangeCredentials {
  * @param {number} rateLimit - API request rate limit
  * @return {ccxt.Exchange} ccxt exchange instance
  */
-export function getExchange(name: string, creds: ExchangeCredentials, rateLimit: number = 1000): ccxt.Exchange {
+export function getExchange(
+  name: string,
+  creds: ExchangeCredentials,
+  rateLimit: number = 1000
+): ccxt.Exchange {
   const exchanges: any = {
     // public or private access
     bittrex: new ccxt.bittrex({ ...creds, enableRateLimit: true }),
@@ -42,7 +46,6 @@ export function getExchange(name: string, creds: ExchangeCredentials, rateLimit:
   if (rateLimit) exchange.rateLimit = rateLimit;
   return exchange;
 }
-
 
 /**
  * A base class to support general ccxt exchange operations
@@ -91,7 +94,8 @@ export default class ccxtConnection extends BaseConnection {
       total: 0,
     };
     if (!this.requireUsdValuation) {
-      formatted.feePrice = formatted.feeCurrency === "USD" ? formatted.feeQuantity : 0;
+      formatted.feePrice =
+        formatted.feeCurrency === "USD" ? formatted.feeQuantity : 0;
       formatted.feeTotal = formatted.feePrice * formatted.feeQuantity;
       formatted.subTotal = transaction.amount;
       formatted.total = transaction.amount + fee;
@@ -100,11 +104,11 @@ export default class ccxtConnection extends BaseConnection {
   }
 
   /**
-     * HELPER: Format orders
-     *
-     * @param {any} order - Unformatted cctx unified transaction
-     * @return {Transaction} Formatted transaction
-     */
+   * HELPER: Format orders
+   *
+   * @param {any} order - Unformatted cctx unified transaction
+   * @return {Transaction} Formatted transaction
+   */
   _formatOrder(order: any): Order {
     const fee: number = order.fee ? order.fee.cost : 0;
     const price: number = order.price ? order.price : order.average;
@@ -131,7 +135,8 @@ export default class ccxtConnection extends BaseConnection {
     };
     if (!this.requireUsdValuation || this.stablecoins.includes(quoteCurrency)) {
       formatted.subTotal = order.cost;
-      formatted.total = order.side === "buy" ? order.cost + fee : order.cost - fee;
+      formatted.total =
+        order.side === "buy" ? order.cost + fee : order.cost - fee;
       formatted.quoteUsdPrice = order.cost / quoteQuantity;
       formatted.baseUsdPrice = formatted.quoteUsdPrice * formatted.quotePrice;
       if (formatted.feeCurrency === formatted.quoteCurrency) {
@@ -142,15 +147,17 @@ export default class ccxtConnection extends BaseConnection {
   }
 
   /**
-     * HELPER
-     * @description Check if params are satified for call
-     * @param {string} method CCXT exchange method name
-     * @param {string} symbol Currency symbol
-     * @return {void}
-     */
+   * HELPER
+   * @description Check if params are satified for call
+   * @param {string} method CCXT exchange method name
+   * @param {string} symbol Currency symbol
+   * @return {void}
+   */
   _paramCheck(method: string, symbol?: string): void {
     if (!this.connection.has[method]) {
-      throw Error(`${this.connection.name} does not support ${method} function`);
+      throw Error(
+        `${this.connection.name} does not support ${method} function`
+      );
     }
     if (this.requireSymbols && !symbol) {
       throw Error(`${this.connection.name}.${method} requires a symbol`);
@@ -158,20 +165,24 @@ export default class ccxtConnection extends BaseConnection {
   }
 
   /**
-    * @description Initialize exchange by fetching balances and loading markets
-    * @override BaseConnection.initialize
-    * @param {boolean} forceReload - (Optional) Additional paramaters
-    * @return {Promise<void>}
-    */
+   * @description Initialize exchange by fetching balances and loading markets
+   * @override BaseConnection.initialize
+   * @param {boolean} forceReload - (Optional) Additional paramaters
+   * @return {Promise<void>}
+   */
   async initialize(forceReload: boolean = false): Promise<void> {
     if (!this.initialized || forceReload) {
       await this.connection.loadMarkets();
       this.symbols = this.connection.symbols;
-      this.markets = Object.values(this.connection.markets).filter((market: any) => market.active).map((market: any) => market.symbol);
+      this.markets = Object.values(this.connection.markets)
+        .filter((market: any) => market.active)
+        .map((market: any) => market.symbol);
       if (this.access === "private") {
         this.balances = await this.getBalances();
       } else {
-        const quotes: Array<string> = _.uniq(this.markets.map((currencyPair: string) => currencyPair.split("/")[1]));
+        const quotes: Array<string> = _.uniq(
+          this.markets.map((currencyPair: string) => currencyPair.split("/")[1])
+        );
         // detect USD (or equivelent) quote currency
         if (!quotes.includes("USD")) {
           if (quotes.includes("USDC")) {
@@ -207,16 +218,31 @@ export default class ccxtConnection extends BaseConnection {
    * @param {number} limit (Optional) Max number of entries per request
    * @return {Promise<Array<any>>} Array of withdrawal objects
    */
-  async getWithdrawals(symbol?: string, key: string = "send", since?: number, limit: number = 100): Promise<Array<any>> {
+  async getWithdrawals(
+    symbol?: string,
+    key: string = "send",
+    since?: number,
+    limit: number = 100
+  ): Promise<Array<any>> {
     if (this.access === "private") {
       this._paramCheck("fetchWithdrawals", symbol);
-      let withdrawals: any = await this.connection.fetchWithdrawals(symbol, since, limit);
-      withdrawals = withdrawals.map((deposit: any) => this._formatTransaction(deposit, key));
+      let withdrawals: any = await this.connection.fetchWithdrawals(
+        symbol,
+        since,
+        limit
+      );
+      withdrawals = withdrawals.map((deposit: any) =>
+        this._formatTransaction(deposit, key)
+      );
       if (since) {
-        withdrawals = withdrawals.filter((deposit: Transaction) => deposit.timestamp.getTime() > since);
+        withdrawals = withdrawals.filter(
+          (deposit: Transaction) => deposit.timestamp.getTime() > since
+        );
       }
       if (this.requireUsdValuation) {
-        withdrawals = withdrawals.map((withdrawal: Transaction) => this.quoteTransaction(withdrawal));
+        withdrawals = withdrawals.map((withdrawal: Transaction) =>
+          this.quoteTransaction(withdrawal)
+        );
         withdrawals = await Promise.all(withdrawals);
       }
       return withdrawals;
@@ -233,16 +259,31 @@ export default class ccxtConnection extends BaseConnection {
    * @param {number} limit (Optional) Max number of entries per request
    * @return {Promise<Array<any>>} Array of deposit objects
    */
-  async getDeposits(symbol?: string, key: string = "receive", since?: number, limit: number = 100): Promise<Array<any>> {
+  async getDeposits(
+    symbol?: string,
+    key: string = "receive",
+    since?: number,
+    limit: number = 100
+  ): Promise<Array<any>> {
     if (this.access === "private") {
       this._paramCheck("fetchDeposits", symbol);
-      let deposits: any = await this.connection.fetchDeposits(symbol, since, limit);
-      deposits = deposits.map((deposit: any) => this._formatTransaction(deposit, key));
+      let deposits: any = await this.connection.fetchDeposits(
+        symbol,
+        since,
+        limit
+      );
+      deposits = deposits.map((deposit: any) =>
+        this._formatTransaction(deposit, key)
+      );
       if (since) {
-        deposits = deposits.filter((deposit: Transaction) => deposit.timestamp.getTime() > since);
+        deposits = deposits.filter(
+          (deposit: Transaction) => deposit.timestamp.getTime() > since
+        );
       }
       if (this.requireUsdValuation) {
-        deposits = deposits.map((deposit: Transaction) => this.quoteTransaction(deposit));
+        deposits = deposits.map((deposit: Transaction) =>
+          this.quoteTransaction(deposit)
+        );
         deposits = await Promise.all(deposits);
       }
       return deposits;
@@ -258,13 +299,23 @@ export default class ccxtConnection extends BaseConnection {
    * @param {number} limit (Optional) Max number of entries per request
    * @return {Promise<Array<any>>} Array of order objects
    */
-  async getOrders(symbol?: string, since?: number, limit: number = 100): Promise<Array<any>> {
+  async getOrders(
+    symbol?: string,
+    since?: number,
+    limit: number = 100
+  ): Promise<Array<any>> {
     if (this.access === "private") {
       this._paramCheck("fetchClosedOrders", symbol);
-      let orders = await this.connection.fetchClosedOrders(symbol, since, limit);
+      let orders = await this.connection.fetchClosedOrders(
+        symbol,
+        since,
+        limit
+      );
       orders = orders.map((order: any) => this._formatOrder(order));
       if (since) {
-        orders = orders.filter((order: Order) => order.timestamp.getTime() > since);
+        orders = orders.filter(
+          (order: Order) => order.timestamp.getTime() > since
+        );
       }
       if (this.requireUsdValuation) {
         orders = orders.map((order: Order) => this.quoteOrder(order));
@@ -283,7 +334,11 @@ export default class ccxtConnection extends BaseConnection {
    * @param {number} limit (Optional) Max number of entries per request
    * @return {Promise<any>} Array of withdrawal objects
    */
-  async getLedger(symbol?: string, since?: number, limit: number = 100): Promise<any> {
+  async getLedger(
+    symbol?: string,
+    since?: number,
+    limit: number = 100
+  ): Promise<any> {
     if (this.access === "private") {
       this._paramCheck("fetchLedger", symbol);
       const ledger = await this.connection.fetchLedger(symbol, since, limit);
@@ -364,20 +419,25 @@ export default class ccxtConnection extends BaseConnection {
    * @param {Array<string>} exclude Currency Symbol
    * @return {Array<string>} Ex: ["USDC"] or ["BTC", "USD"]
    */
-  getQuoteConversion(symbol: string, exclude: Array<string> = []): Array<string> {
-    const currencyPairs: Array<string> = this.markets.filter((currencyPair: string) => {
-      const [base, quote] = currencyPair.split("/");
-      return base === symbol && !exclude.includes(quote);
-    });
+  getQuoteConversion(
+    symbol: string,
+    exclude: Array<string> = []
+  ): Array<string> {
+    const currencyPairs: Array<string> = this.markets.filter(
+      (currencyPair: string) => {
+        const [base, quote] = currencyPair.split("/");
+        return base === symbol && !exclude.includes(quote);
+      }
+    );
 
     if (currencyPairs.length > 0) {
       const quoteOptions = [...this.stablecoins, "BTC", "ETH"];
-      const quoteCurrency: string = quoteOptions.find((quoteSymbol: string) => currencyPairs.includes(`${symbol}/${quoteSymbol}`)) || "";
+      const quoteCurrency: string =
+        quoteOptions.find((quoteSymbol: string) =>
+          currencyPairs.includes(`${symbol}/${quoteSymbol}`)
+        ) || "";
       if (!this.stablecoins.includes(quoteCurrency)) {
-        return [
-          quoteCurrency,
-          this.quoteCurrency,
-        ];
+        return [quoteCurrency, this.quoteCurrency];
       }
       return [quoteCurrency];
     }
@@ -401,11 +461,21 @@ export default class ccxtConnection extends BaseConnection {
     let exclude: Array<string> = [];
     while (quotes.length > 0) {
       exclude = _.uniq(exclude.concat(quotes));
-      const candle = await this.connection.fetchOHLCV(`${symbol}/${quotes[0]}`, "1m", timestamp, 2);
+      const candle = await this.connection.fetchOHLCV(
+        `${symbol}/${quotes[0]}`,
+        "1m",
+        timestamp,
+        2
+      );
       if (candle.length > 0) {
         price = candle[0][3];
         if (quotes.length > 1) {
-          const conversionCandle = await this.connection.fetchOHLCV(`${quotes[0]}/${quotes[1]}`, "1m", timestamp, 2);
+          const conversionCandle = await this.connection.fetchOHLCV(
+            `${quotes[0]}/${quotes[1]}`,
+            "1m",
+            timestamp,
+            2
+          );
           price = price * conversionCandle[0][3];
         }
         return price;
@@ -425,7 +495,13 @@ export default class ccxtConnection extends BaseConnection {
    * @param {number} quotePrice Price of base currency denominated in quote currency
    * @return {Promise<any>} Price of asset in USD
    */
-  async getCommonPrices(timestamp: number, baseCurrency: string, feeCurrency?: string, quoteCurrency?: string, quotePrice?: number): Promise<number> {
+  async getCommonPrices(
+    timestamp: number,
+    baseCurrency: string,
+    feeCurrency?: string,
+    quoteCurrency?: string,
+    quotePrice?: number
+  ): Promise<number> {
     const symbol: string = quoteCurrency ? quoteCurrency : baseCurrency;
     const price: number = await this.getQuote(symbol, timestamp);
     const prices: any = {};
@@ -461,14 +537,20 @@ export default class ccxtConnection extends BaseConnection {
    */
   async quoteTransaction(tx: Transaction, prices?: any): Promise<Transaction> {
     // Get and update prices
-    prices = prices ? prices : await this.getCommonPrices(tx.timestamp.getTime(), tx.baseCurrency, tx.feeCurrency);
+    prices = prices
+      ? prices
+      : await this.getCommonPrices(
+          tx.timestamp.getTime(),
+          tx.baseCurrency,
+          tx.feeCurrency
+        );
     tx.baseUsdPrice = prices.baseUsdPrice;
     tx.feePrice = prices.feePrice;
 
     // Update totals
     tx.feeTotal = tx.feePrice * tx.feeQuantity;
     tx.subTotal = tx.baseQuantity * tx.baseUsdPrice;
-    tx.total = tx.subTotal + (tx.feePrice * tx.feeQuantity);
+    tx.total = tx.subTotal + tx.feePrice * tx.feeQuantity;
     return tx;
   }
 
@@ -480,16 +562,26 @@ export default class ccxtConnection extends BaseConnection {
    */
   async quoteOrder(order: Order, prices?: any): Promise<Order> {
     // Get and update prices
-    prices = prices ? prices : await this.getCommonPrices(order.timestamp.getTime(), order.baseCurrency, order.feeCurrency, order.quoteCurrency, order.quotePrice);
+    prices = prices
+      ? prices
+      : await this.getCommonPrices(
+          order.timestamp.getTime(),
+          order.baseCurrency,
+          order.feeCurrency,
+          order.quoteCurrency,
+          order.quotePrice
+        );
     order.baseUsdPrice = prices.baseUsdPrice;
     order.feePrice = prices.feePrice;
     order.quoteUsdPrice = prices.quoteUsdPrice;
 
     // Update totals
     order.feeTotal = order.feePrice * order.feeQuantity;
-    order.subTotal = order.quoteQuantity * order.baseUsdPrice;
-    order.total = order.type === "buy" ? order.subTotal + order.feeTotal : order.subTotal - order.feeTotal;
+    order.subTotal = order.baseQuantity * order.baseUsdPrice;
+    order.total =
+      order.type === "buy"
+        ? order.subTotal + order.feeTotal
+        : order.subTotal - order.feeTotal;
     return order;
   }
 }
-
