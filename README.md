@@ -2,7 +2,7 @@
 
 ## _Takes the trash out of getting crypto account data_
 
-[![npm version](https://badge.fury.io/js/crypto-janitor.svg)](https://badge.fury.io/js/crypto-janitor) [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger) [![quality](https://img.shields.io/npms-io/quality-score/crypto-janitor)]() [![language](https://img.shields.io/github/languages/top/rileystephens28/crypto-janitor)]() [![license](https://img.shields.io/github/license/rileystephens28/crypto-janitor)]()
+[![npm version](https://badge.fury.io/js/crypto-janitor.svg)](https://badge.fury.io/js/crypto-janitor) [[![Build Status](https://travis-ci.com/rileystephens28/crypto-janitor.svg?branch=main)](https://travis-ci.com/rileystephens28/crypto-janitor) [![quality](https://img.shields.io/npms-io/quality-score/crypto-janitor)]() [![language](https://img.shields.io/github/languages/top/rileystephens28/crypto-janitor)]() [![license](https://img.shields.io/github/license/rileystephens28/crypto-janitor)]()
 
 The Crypto Janitor provides a simple interface for
 
