@@ -32,11 +32,12 @@
     "publish": "npm publish"
   },
   "engines": {
-    "node": "12"
+    "node": "16"
   },
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "dependencies": {
+    "@knapsack-pro/jest": "^5.2.0",
     "ccxt": "^1.47.95",
     "celsius-sdk": "^0.10.15",
     "etherscan-api": "^10.0.5",
@@ -58,10 +59,10 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.22.0",
     "fs": "0.0.1-security",
-    "jest": "^27.0.6",
+    "jest": "^26.6.3",
     "papaparse": "^5.3.1",
     "path": "^0.12.7",
-    "ts-jest": "^27.0.4",
+    "ts-jest": "^26.5.6",
     "typescript": "^3.9.10"
   }
 }

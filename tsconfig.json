@@ -13,7 +13,7 @@
   },
   "compileOnSave": true,
   "exclude": [
-    "src/test",
+    "src/__tests__",
   ],
   "include": [
     "src",
