@@ -26,9 +26,10 @@
     "easy crypto"
   ],
   "scripts": {
-    "lint": "eslint --ext .js,.ts .",
+    "lint": "eslint --ext .js,.ts",
     "build": "tsc",
-    "test": "npx jest"
+    "test": "npx jest",
+    "publish": "npm publish"
   },
   "engines": {
     "node": "12"
