@@ -1,7 +1,21 @@
 language: node_js
 node_js:
   - 16
+cache:
+  directories:
+    - $HOME/.npm
+    - node_modules
 script:
-  - npm run build
-  - npm run lint
-  - npm run test
+  - "$(npm bin)/knapsack-pro-jest --runInBand"
+  # - npm run build
+  # - npm run lint
+  # - npm run test
+env:
+  global:
+    - KNAPSACK_PRO_CI_NODE_TOTAL=2
+    # allows to be able to retry failed tests on one of parallel job (CI node)
+    - KNAPSACK_PRO_FIXED_QUEUE_SPLIT=true
+
+  jobs:
+    - KNAPSACK_PRO_CI_NODE_INDEX=0
+    - KNAPSACK_PRO_CI_NODE_INDEX=1
