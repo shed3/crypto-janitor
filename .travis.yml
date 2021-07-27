@@ -1,16 +1,9 @@
 language: node_js
 node_js:
   - 16
-cache:
-  directories:
-    - $HOME/.npm
-    - node_modules
-
+cache: npm
 script:
   - "$(npm bin)/knapsack-pro-jest --runInBand"
-  # - npm run build
-  # - npm run lint
-  # - npm run test
 env:
   global:
     - KNAPSACK_PRO_CI_NODE_TOTAL=2
