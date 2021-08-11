@@ -96,27 +96,15 @@ export default class Nexo extends CsvConnection {
    * @return {Order} Formatted Order
    */
   _formatOrder(order: any): Order {
-    const stableCoins = ["USD", "USDC", "USDTERC"];
-    const otherQuotesCoins = ["BTC", "ETH"];
-
     const coins = order.Currency.split("/"); // parse coins from pair
     const amounts = order.Amount.split(" / ").map((x: string) => parseFloat(x)); // parse quantities from pair
 
     // set base/quote currencies and quantities
-    let type: string = "buy";
+    let type: string = "swap";
     let quoteCurrency: string = coins[0];
     let quoteQuantity: number = Math.abs(amounts[0]);
     let baseCurrency: string = coins[1];
-    let baseQuantity: number = amounts[1];
-
-    // attempted to swap base and quote currencies to refelect a sell to stable, BTC, or ETH
-    if (stableCoins.includes(coins[1]) || otherQuotesCoins.includes(coins[1])) {
-      type = "sell";
-      baseCurrency = coins[0];
-      baseQuantity = amounts[0];
-      quoteCurrency = coins[1];
-      quoteQuantity = amounts[1];
-    }
+    let baseQuantity: number = Math.abs(amounts[1]);
 
     // Correct nexo token names
     baseCurrency = baseCurrency === "USDTERC" ? "USDT" : baseCurrency;
@@ -127,8 +115,10 @@ export default class Nexo extends CsvConnection {
     // Calculate USD related values
     const total: number = Math.abs(order["USD Equivalent"].slice(1));
     const quotePrice: number = quoteQuantity / baseQuantity;
-    const quoteUSDPrice: number = quoteQuantity / total;
-    const baseUSDPrice: number = quoteUSDPrice * quotePrice;
+    const quoteUSDPrice: number = this.stableCurrencies.includes(quoteCurrency)
+      ? 1
+      : quoteQuantity / total;
+    const baseUsdPrice: number = quoteUSDPrice * quotePrice;
 
     // create formatted order object
     const formatted: Order = {
@@ -137,12 +127,12 @@ export default class Nexo extends CsvConnection {
       type: type,
       baseCurrency: baseCurrency,
       baseQuantity: baseQuantity,
-      baseUsdPrice: baseUSDPrice,
+      baseUsdPrice: baseUsdPrice,
       quoteCurrency: quoteCurrency,
-      quoteQuantity: quoteQuantity,
+      quoteQuantity: Math.abs(quoteQuantity),
       quotePrice: quotePrice,
       quoteUsdPrice: quoteUSDPrice,
-      feeCurrency: "USD",
+      feeCurrency: "USDC",
       feeQuantity: 0,
       feePrice: 1,
       feeTotal: 0,

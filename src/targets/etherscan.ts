@@ -147,7 +147,7 @@ export default class Etherscan extends BaseConnection {
         // Could be sending/receiving eth or receiving a token
         formattedTx.type = tx.from === this.address ? "send" : "receive";
         formattedTx.feeCurrency =
-          formattedTx.type === "receive" ? "USD" : formattedTx.feeCurrency;
+          formattedTx.type === "receive" ? "USDC" : formattedTx.feeCurrency;
         formattedTx.feeQuantity =
           formattedTx.type === "receive" ? 0 : formattedTx.feeQuantity;
         formattedTx.baseCurrency = tx.hasOwnProperty("tokenSymbol")
@@ -179,13 +179,13 @@ export default class Etherscan extends BaseConnection {
         formattedTx.type = ethTx.from === this.address ? "buy" : "sell";
         formattedTx.quoteCurrency = "ETH";
         formattedTx.quoteQuantity = web3.utils.fromWei(ethTx.value) * 1;
+        formattedTx.quoteUsdPrice = 0;
         formattedTx.quotePrice =
           formattedTx.quoteQuantity / formattedTx.baseQuantity;
       } else {
         // send token and pay gas with eth or claim airdrop token
         formattedTx.type = tokenTx.to === this.address ? "receive" : "send";
       }
-      formattedTx.quoteUsdPrice = 0;
     } else if (entryGroup.length === 3) {
       // buy/sell token using another token with high
       // volume liquidity pool converter (Ex: WBTC, WETH, etc)
@@ -234,7 +234,8 @@ export default class Etherscan extends BaseConnection {
       const result: Order = await market.dataSource.quoteOrder(
         formattedTx as Order
       );
-      return result;
+      // return attempted swap version
+      return this._attemptedSwapConversion(result);
     } else {
       // Must use this loop to make sure a market is found and that market returns a valid
       // price for the provided timestamp. Once a valid market and price are found apply the
@@ -312,7 +313,6 @@ export default class Etherscan extends BaseConnection {
       );
       this.transactions = await Promise.all(cleanedTxs);
       this.transactions = _.sortBy(this.transactions, "timestamp");
-      // await this.initialize();
     }
     let filteredTransactions: Array<Transaction> = this.transactions;
     if (type) {
@@ -361,7 +361,7 @@ export default class Etherscan extends BaseConnection {
    * @return {Promise<Array<any>>} Array of deposit objects
    */
   async getOrders(since?: number): Promise<Array<any>> {
-    return await this.filterTransactions(["buy", "sell"], since);
+    return await this.filterTransactions(["buy", "sell", "swap"], since);
   }
 
   /**

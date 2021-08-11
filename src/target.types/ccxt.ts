@@ -111,16 +111,18 @@ export default class ccxtConnection extends BaseConnection {
    */
   _formatOrder(order: any): Order {
     const fee: number = order.fee ? order.fee.cost : 0;
-    const price: number = order.price ? order.price : order.average;
     const feeCurrency: string = order.fee ? order.fee.currency : "USD";
-    const quoteQuantity: number = order.cost;
-    const [baseCurrency, quoteCurrency] = order.symbol.split("/");
+    const price: number = order.price ? order.price : order.average;
+    let [baseCurrency, quoteCurrency] = order.symbol.split("/");
+    let baseQuantity: number = order.filled;
+    let quoteQuantity: number = order.cost;
+
     const formatted: Order = {
       id: order.id,
       timestamp: moment.utc(order.timestamp).toDate(),
       type: order.side,
       baseCurrency: baseCurrency,
-      baseQuantity: order.amount,
+      baseQuantity: baseQuantity,
       baseUsdPrice: 0,
       quoteCurrency: quoteCurrency,
       quoteQuantity: quoteQuantity,
@@ -128,17 +130,21 @@ export default class ccxtConnection extends BaseConnection {
       quoteUsdPrice: 0,
       feeCurrency: feeCurrency,
       feeQuantity: fee,
-      feePrice: this.stablecoins.includes(feeCurrency) ? 1 : 0,
+      feePrice: this.stableCurrencies.includes(feeCurrency) ? 1 : 0,
       feeTotal: 0,
       subTotal: 0,
       total: 0,
     };
-    if (!this.requireUsdValuation || this.stablecoins.includes(quoteCurrency)) {
+    if (
+      !this.requireUsdValuation ||
+      this.stableCurrencies.includes(quoteCurrency)
+    ) {
       formatted.subTotal = order.cost;
       formatted.total =
         order.side === "buy" ? order.cost + fee : order.cost - fee;
-      formatted.quoteUsdPrice = order.cost / quoteQuantity;
-      formatted.baseUsdPrice = formatted.quoteUsdPrice * formatted.quotePrice;
+      formatted.quoteUsdPrice = 1;
+      formatted.baseUsdPrice = quoteQuantity / baseQuantity;
+      // formatted.quotePrice = formatted.baseUsdPrice / formatted.quoteUsdPrice;
       if (formatted.feeCurrency === formatted.quoteCurrency) {
         formatted.feeTotal = formatted.feePrice * formatted.feeQuantity;
       }
@@ -285,6 +291,7 @@ export default class ccxtConnection extends BaseConnection {
           this.quoteTransaction(deposit)
         );
         deposits = await Promise.all(deposits);
+        deposits = deposits.filter((tx: Transaction) => tx.baseUsdPrice !== 0);
       }
       return deposits;
     }
@@ -311,6 +318,7 @@ export default class ccxtConnection extends BaseConnection {
         since,
         limit
       );
+      orders = orders.filter((order: any) => order.filled > 0);
       orders = orders.map((order: any) => this._formatOrder(order));
       if (since) {
         orders = orders.filter(
@@ -320,6 +328,9 @@ export default class ccxtConnection extends BaseConnection {
       if (this.requireUsdValuation) {
         orders = orders.map((order: Order) => this.quoteOrder(order));
         orders = await Promise.all(orders);
+        orders = orders.map((order: Order) =>
+          this._attemptedSwapConversion(order)
+        );
       }
       return orders;
     }
@@ -431,15 +442,17 @@ export default class ccxtConnection extends BaseConnection {
     );
 
     if (currencyPairs.length > 0) {
-      const quoteOptions = [...this.stablecoins, "BTC", "ETH"];
+      const quoteOptions = [...this.stableCurrencies, "BTC", "ETH"];
       const quoteCurrency: string =
         quoteOptions.find((quoteSymbol: string) =>
           currencyPairs.includes(`${symbol}/${quoteSymbol}`)
         ) || "";
-      if (!this.stablecoins.includes(quoteCurrency)) {
+      if (!this.stableCurrencies.includes(quoteCurrency)) {
         return [quoteCurrency, this.quoteCurrency];
       }
       return [quoteCurrency];
+    } else {
+      // TODO provide fallback market data sources if no prices are found (this should be rare like if exchange delists asset or locks trading)
     }
     return [];
   }
@@ -451,7 +464,7 @@ export default class ccxtConnection extends BaseConnection {
    * @return {Promise<number>} Price of asset in USD
    */
   async getQuote(symbol: string, timestamp: number): Promise<number> {
-    if (this.stablecoins.includes(symbol)) {
+    if (this.stableCurrencies.includes(symbol)) {
       return 1;
     }
     // Must use this loop to make sure a market is found and that market returns a valid
@@ -510,7 +523,7 @@ export default class ccxtConnection extends BaseConnection {
     if (feeCurrency === symbol) {
       prices.feePrice = price;
     } else if (feeCurrency) {
-      if (this.stablecoins.includes(feeCurrency)) {
+      if (this.stableCurrencies.includes(feeCurrency)) {
         prices.feePrice = 1;
       } else if (feeCurrency) {
         prices.feePrice = await this.getQuote(feeCurrency, timestamp);

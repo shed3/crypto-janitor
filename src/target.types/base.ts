@@ -14,7 +14,7 @@ export interface Transaction {
   total: number;
 }
 
-// Buy, Sell
+// Buy, Sell, Swap
 export interface Order {
   id: string;
   timestamp: Date;
@@ -47,7 +47,9 @@ export default class BaseConnection {
   initialized: boolean;
   requireSymbols: boolean;
   requireUsdValuation: boolean;
-  stablecoins: Array<string> = ["USD", "USDC", "USDT"];
+  stableCoins: Array<string> = ["USDC", "USDT"];
+  fiatCurrencies: Array<string> = ["USD"];
+  stableCurrencies: Array<string> = ["USD", "USDC", "USDT"];
 
   /**
    * Create BaseConnection instance
@@ -83,6 +85,31 @@ export default class BaseConnection {
       baseJSON.params = updatedParams;
     }
     return baseJSON;
+  }
+
+  /**
+   * HELPER: Convert buy/sell to swap if no fiat is involved in order
+   *
+   * @param {any} order - Order instance
+   * @return {Order} Reformatted Order
+   */
+  _attemptedSwapConversion(order: Order): Order {
+    if (!this.fiatCurrencies.includes(order.quoteCurrency)) {
+      if (order.type === "sell") {
+        const tempBC = order.baseCurrency;
+        const tempBQ = order.baseQuantity;
+        const tempBP = order.baseUsdPrice;
+        order.baseCurrency = order.quoteCurrency;
+        order.baseQuantity = order.quoteQuantity;
+        order.baseUsdPrice = order.quoteUsdPrice;
+        order.quoteCurrency = tempBC;
+        order.quoteQuantity = tempBQ;
+        order.quoteUsdPrice = tempBP;
+        order.quotePrice = order.baseUsdPrice / order.quoteUsdPrice;
+      }
+      order.type = "swap";
+    }
+    return order;
   }
 
   /**
