@@ -2,9 +2,6 @@ import { Transaction, Order } from "../target.types";
 import { expect } from "chai";
 
 export const checkTxFields = (tx: Transaction) => {
-  if (!tx.baseUsdPrice) {
-    console.log(tx);
-  }
   expect(tx).to.include.all.keys(
     "id",
     "timestamp",

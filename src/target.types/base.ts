@@ -88,6 +88,31 @@ export default class BaseConnection {
   }
 
   /**
+   * HELPER: Convert buy/sell to swap if no fiat is involved in order
+   *
+   * @param {any} order - Order instance
+   * @return {Order} Reformatted Order
+   */
+  _attemptedSwapConversion(order: Order): Order {
+    if (!this.fiatCurrencies.includes(order.quoteCurrency)) {
+      if (order.type === "sell") {
+        const tempBC = order.baseCurrency;
+        const tempBQ = order.baseQuantity;
+        const tempBP = order.baseUsdPrice;
+        order.baseCurrency = order.quoteCurrency;
+        order.baseQuantity = order.quoteQuantity;
+        order.baseUsdPrice = order.quoteUsdPrice;
+        order.quoteCurrency = tempBC;
+        order.quoteQuantity = tempBQ;
+        order.quoteUsdPrice = tempBP;
+        order.quotePrice = order.baseUsdPrice / order.quoteUsdPrice;
+      }
+      order.type = "swap";
+    }
+    return order;
+  }
+
+  /**
    * Initialize exchange by fetching balances and loading markets
    * @return {void}
    */

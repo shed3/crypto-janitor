@@ -102,14 +102,21 @@ export default class CsvConnection extends BaseConnection {
   /**
    * @description Filter csv connection transactions for buys and sells
    * @override BaseConnection.getOrders
-   * @param {Array<string>} keys - Order keys (default=["buy", "sell"])
+   * @param {Array<string>} keys - Order keys (default=["buy", "sell", "swap"])
    * @return {Promise<Array<any>>} Array of order objects
    */
-  async getOrders(keys: Array<string> = ["buy", "sell"]): Promise<Array<any>> {
+  async getOrders(
+    keys: Array<string> = ["buy", "sell", "swap"]
+  ): Promise<Array<any>> {
     if (!this.initialized) {
       await this.initialize();
     }
-    return this.transactions.filter((x: any) => keys.includes(x.type));
+    const test: Array<any> = this.transactions.filter((x: any) =>
+      keys.includes(x.type)
+    );
+    console.log(test);
+    return test;
+    // return this.transactions.filter((x: any) => keys.includes(x.type));
   }
 
   /**

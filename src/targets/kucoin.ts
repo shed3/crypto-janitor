@@ -59,7 +59,6 @@ export default class Kucoin extends CcxtConnection {
     }
     let results = await Promise.all(allTransactions);
     results = _.sortBy(_.flatten(results), "timestamp");
-    console.log(results);
     return results;
   }
 }

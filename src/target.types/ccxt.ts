@@ -153,31 +153,6 @@ export default class ccxtConnection extends BaseConnection {
   }
 
   /**
-   * HELPER: Convert buy/sell to swap if no fiat is involved in order
-   *
-   * @param {any} order - Order instance
-   * @return {Order} Reformatted Order
-   */
-  _attemptedSwapConversion(order: Order): Order {
-    if (!this.fiatCurrencies.includes(order.quoteCurrency)) {
-      if (order.type === "sell") {
-        const tempBC = order.baseCurrency;
-        const tempBQ = order.baseQuantity;
-        const tempBP = order.baseUsdPrice;
-        order.baseCurrency = order.quoteCurrency;
-        order.baseQuantity = order.quoteQuantity;
-        order.baseUsdPrice = order.quoteUsdPrice;
-        order.quoteCurrency = tempBC;
-        order.quoteQuantity = tempBQ;
-        order.quoteUsdPrice = tempBP;
-        order.quotePrice = order.baseUsdPrice / order.quoteUsdPrice;
-      }
-      order.type = "swap";
-    }
-    return order;
-  }
-
-  /**
    * HELPER
    * @description Check if params are satified for call
    * @param {string} method CCXT exchange method name
@@ -316,6 +291,7 @@ export default class ccxtConnection extends BaseConnection {
           this.quoteTransaction(deposit)
         );
         deposits = await Promise.all(deposits);
+        deposits = deposits.filter((tx: Transaction) => tx.baseUsdPrice !== 0);
       }
       return deposits;
     }
@@ -356,7 +332,6 @@ export default class ccxtConnection extends BaseConnection {
           this._attemptedSwapConversion(order)
         );
       }
-      console.log(orders);
       return orders;
     }
     return [];
@@ -476,6 +451,8 @@ export default class ccxtConnection extends BaseConnection {
         return [quoteCurrency, this.quoteCurrency];
       }
       return [quoteCurrency];
+    } else {
+      // TODO provide fallback market data sources if no prices are found (this should be rare like if exchange delists asset or locks trading)
     }
     return [];
   }
