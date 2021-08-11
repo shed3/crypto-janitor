@@ -9,6 +9,6 @@ const config: Config.InitialOptions = {
   testTimeout: 60000, // so long because of exchange requests
   maxConcurrency: 7,
   maxWorkers: 7,
-  testMatch: ["**/__tests__/nexo.test.ts"],
+  testMatch: ["**/__tests__/*.test.ts"],
 };
 export default config;

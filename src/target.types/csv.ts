@@ -114,7 +114,6 @@ export default class CsvConnection extends BaseConnection {
     const test: Array<any> = this.transactions.filter((x: any) =>
       keys.includes(x.type)
     );
-    console.log(test);
     return test;
     // return this.transactions.filter((x: any) => keys.includes(x.type));
   }
