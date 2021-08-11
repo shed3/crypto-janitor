@@ -19,15 +19,15 @@ describe("Coinbase Pro", () => {
     await connection.initialize();
   });
 
-  it("#getBalance", async () => {
+  it.skip("#getBalance", async () => {
     await getCcxtConnectionBalance(connection);
   });
 
-  it("#getWithdrawals", async () => {
+  it.skip("#getWithdrawals", async () => {
     await getCcxtConnectionWithdrawals(connection);
   });
 
-  it("#getDeposits", async () => {
+  it.skip("#getDeposits", async () => {
     await getCcxtConnectionDeposits(connection);
   });
 
@@ -35,7 +35,7 @@ describe("Coinbase Pro", () => {
     await getCcxtConnectionOrders(connection);
   });
 
-  it("#getAllTransaction - since 03/20/2021", async () => {
+  it.skip("#getAllTransaction - since 03/20/2021", async () => {
     const since = new Date("2021-03-20");
     await getAllTransactionsSince(connection, since.getTime());
   });

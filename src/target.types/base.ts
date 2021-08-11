@@ -14,7 +14,7 @@ export interface Transaction {
   total: number;
 }
 
-// Buy, Sell
+// Buy, Sell, Swap
 export interface Order {
   id: string;
   timestamp: Date;
@@ -47,7 +47,9 @@ export default class BaseConnection {
   initialized: boolean;
   requireSymbols: boolean;
   requireUsdValuation: boolean;
-  stablecoins: Array<string> = ["USD", "USDC", "USDT"];
+  stableCoins: Array<string> = ["USDC", "USDT"];
+  fiatCurrencies: Array<string> = ["USD"];
+  stableCurrencies: Array<string> = ["USD", "USDC", "USDT"];
 
   /**
    * Create BaseConnection instance
