@@ -110,7 +110,6 @@ export const getCcxtConnectionOrders = async (
     symbol?: string
 ) => {
     const result = await connection.getOrders(symbol);
-    console.log(result);
     expect(result).to.be.an("array").that.is.not.empty;
     result.forEach((order: any) => checkOrderFields(order as Order));
 };
