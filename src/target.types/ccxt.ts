@@ -22,7 +22,7 @@ interface ExchangeCredentials {
  */
 export function getExchange(
     name: string,
-    creds: ExchangeCredentials,
+    creds?: ExchangeCredentials,
     rateLimit: number = 1000
 ): ccxt.Exchange {
     const exchanges: any = {
@@ -55,6 +55,7 @@ export function getExchange(
 export default class ccxtConnection extends BaseConnection {
     quoteCurrency: string;
     markets: Array<string>;
+    fallbackMarketConnection: ccxtConnection | null;
     access: string;
     /**
      * Create BaseConnection instance
@@ -68,6 +69,9 @@ export default class ccxtConnection extends BaseConnection {
         this.access = credentials && credentials.apiKey ? "private" : "public";
         this.connection = getExchange(name, credentials, params.rateLimit);
         this.quoteCurrency = "USD";
+        this.fallbackMarketConnection = params.fallback
+            ? new params.fallback({})
+            : null;
         this.markets = [];
     }
 
@@ -184,6 +188,9 @@ export default class ccxtConnection extends BaseConnection {
     async initialize(forceReload: boolean = false): Promise<void> {
         if (!this.initialized || forceReload) {
             await this.connection.loadMarkets();
+            if (this.fallbackMarketConnection) {
+                await this.fallbackMarketConnection.initialize();
+            }
             this.symbols = this.connection.symbols;
             this.markets = Object.values(this.connection.markets)
                 .filter((market: any) => market.active)
@@ -463,12 +470,12 @@ export default class ccxtConnection extends BaseConnection {
      * @description Get preferred market(s) to convert asset to USD (or stablecoin)
      * @param {string} symbol Currency Symbol
      * @param {Array<string>} exclude Currency Symbol
-     * @return {Array<string>} Ex: ["USDC"] or ["BTC", "USD"]
+     * @return {Promise<Array<string>>} Ex: ["USDC"] or ["BTC", "USD"]
      */
-    getQuoteConversion(
+    async getQuoteConversion(
         symbol: string,
         exclude: Array<string> = []
-    ): Array<string> {
+    ): Promise<Array<string>> {
         const currencyPairs: Array<string> = this.markets.filter(
             (currencyPair: string) => {
                 const [base, quote] = currencyPair.split("/");
@@ -486,8 +493,6 @@ export default class ccxtConnection extends BaseConnection {
                 return [quoteCurrency, this.quoteCurrency];
             }
             return [quoteCurrency];
-        } else {
-            // TODO provide fallback market data sources if no prices are found (this should be rare like if exchange delists asset or locks trading)
         }
         return [];
     }
@@ -502,36 +507,43 @@ export default class ccxtConnection extends BaseConnection {
         if (this.stableCurrencies.includes(symbol)) {
             return 1;
         }
-        // Must use this loop to make sure a market is found and that market returns a valid
-        // price for the provided timestamp. Consider making this a shared function
-        let price: number = 0;
-        let quotes: Array<string> = this.getQuoteConversion(symbol);
-        let exclude: Array<string> = [];
-        while (quotes.length > 0) {
-            exclude = _.uniq(exclude.concat(quotes));
-            const candle = await this.connection.fetchOHLCV(
-                `${symbol}/${quotes[0]}`,
-                "1m",
-                timestamp,
-                2
-            );
-            if (candle.length > 0) {
-                price = candle[0][3];
-                if (quotes.length > 1) {
-                    const conversionCandle = await this.connection.fetchOHLCV(
-                        `${quotes[0]}/${quotes[1]}`,
-                        "1m",
-                        timestamp,
-                        2
-                    );
-                    price = price * conversionCandle[0][3];
+        const marketSources: Array<any> = [this];
+        if (this.fallbackMarketConnection) {
+            marketSources.push(this.fallbackMarketConnection);
+        }
+        for (const source of marketSources) {
+            // Must use this loop to make sure a market is found and that market returns a valid
+            // price for the provided timestamp. Consider making this a shared function
+            let price: number = 0;
+            let quotes: Array<string> = await source.getQuoteConversion(symbol);
+            let exclude: Array<string> = [];
+            while (quotes.length > 0) {
+                exclude = _.uniq(exclude.concat(quotes));
+                const candle = await source.connection.fetchOHLCV(
+                    `${symbol}/${quotes[0]}`,
+                    "1m",
+                    timestamp,
+                    2
+                );
+                if (candle.length > 0) {
+                    price = candle[0][3];
+                    if (quotes.length > 1) {
+                        const conversionCandle =
+                            await source.connection.fetchOHLCV(
+                                `${quotes[0]}/${quotes[1]}`,
+                                "1m",
+                                timestamp,
+                                2
+                            );
+                        price = price * conversionCandle[0][3];
+                    }
+                    return price;
+                } else {
+                    quotes = await source.getQuoteConversion(symbol, exclude);
                 }
-                return price;
-            } else {
-                quotes = this.getQuoteConversion(symbol, exclude);
             }
         }
-        return price;
+        return 0; // if you are reaching this you should provide fallback market sources for your connection
     }
 
     /**
