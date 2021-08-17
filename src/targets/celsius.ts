@@ -45,7 +45,7 @@ export default class CelsiusConnection extends BaseConnection {
             baseUsdPrice: total / nativeTotal,
             feeCurrency: "USD",
             feeQuantity: 0,
-            feePrice: 0,
+            feeUsdPrice: 0,
             feeTotal: 0,
             subTotal: total,
             total: total,

@@ -84,7 +84,7 @@ export default class Nexo extends CsvConnection {
             baseUsdPrice: total / baseQuantity,
             feeCurrency: "USD",
             feeQuantity: 0,
-            feePrice: 1,
+            feeUsdPrice: 1,
             feeTotal: 0,
             subTotal: total,
             total: total,
@@ -121,12 +121,13 @@ export default class Nexo extends CsvConnection {
         // Calculate USD related values
         const total: number = Math.abs(order["USD Equivalent"].slice(1));
         const quotePrice: number = quoteQuantity / baseQuantity;
-        const quoteUSDPrice: number = this.stableCurrencies.includes(
-            quoteCurrency
-        )
-            ? 1
-            : quoteQuantity / total;
-        const baseUsdPrice: number = quoteUSDPrice * quotePrice;
+        // const quoteUSDPrice: number = this.stableCurrencies.includes(
+        //     quoteCurrency
+        // )
+        //     ? 1
+        //     : quoteQuantity / total;
+        const quoteUSDPrice: number = total / quoteQuantity;
+        const baseUsdPrice: number = total / baseQuantity;
 
         // create formatted order object
         const formatted: Order = {
@@ -140,9 +141,9 @@ export default class Nexo extends CsvConnection {
             quoteQuantity: Math.abs(quoteQuantity),
             quotePrice: quotePrice,
             quoteUsdPrice: quoteUSDPrice,
-            feeCurrency: "USDC",
+            feeCurrency: "USD",
             feeQuantity: 0,
-            feePrice: 1,
+            feeUsdPrice: 1,
             feeTotal: 0,
             subTotal: total,
             total: total,

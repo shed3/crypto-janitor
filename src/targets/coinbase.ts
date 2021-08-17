@@ -40,31 +40,36 @@ export default class Coinbase extends CcxtConnection {
      * @return {Transaction} Formatted transaction
      */
     _formatLedgerEntry(entry: any, type: string): Transaction {
-        const fee: number =
+        const feeQty: number =
             entry.network && entry.network.transaction_fee
                 ? parseFloat(entry.network.transaction_fee.amount)
                 : 0;
         const feeCurrency: string =
-            fee > 0 ? entry.network.transaction_fee.currency : "USD";
+            feeQty > 0 ? entry.network.transaction_fee.currency : "USD";
         const nativeTotal: number = Math.abs(
             parseFloat(entry.native_amount.amount)
         );
-        let total: number = Math.abs(parseFloat(entry.amount.amount));
-        total = entry.amount.currency === feeCurrency ? total - fee : total;
-        const price: number = nativeTotal / total;
-        const feePrice: number = fee * price;
-        const subTotal: number = nativeTotal - fee * price;
+        let baseQuantity: number = Math.abs(parseFloat(entry.amount.amount));
+        const price: number = nativeTotal / baseQuantity;
+        baseQuantity =
+            entry.amount.currency === feeCurrency
+                ? baseQuantity - feeQty
+                : baseQuantity;
+        const feeUsdPrice: number = feeQty > 0 ? price : 1;
+
+        const feeTotal: number = feeQty * feeUsdPrice;
+        const subTotal: number = nativeTotal - feeTotal;
         const formatted: Transaction = {
             id: entry.id,
             timestamp: new Date(entry.created_at),
             type: type,
             baseCurrency: entry.amount.currency,
-            baseQuantity: total,
-            baseUsdPrice: subTotal / total,
-            feeCurrency: fee ? entry.network.transaction_fee.currency : "USD",
-            feeQuantity: fee,
-            feePrice: feePrice,
-            feeTotal: feePrice * fee,
+            baseQuantity: baseQuantity,
+            baseUsdPrice: subTotal / baseQuantity,
+            feeCurrency: feeCurrency,
+            feeQuantity: feeQty,
+            feeUsdPrice: feeUsdPrice,
+            feeTotal: feeTotal,
             subTotal: subTotal,
             total: nativeTotal,
         };

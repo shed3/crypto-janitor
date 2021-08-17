@@ -6,10 +6,10 @@ export interface Transaction {
     type: string;
     baseCurrency: string;
     baseQuantity: number;
+    baseUsdPrice: number;
     feeCurrency: string;
     feeQuantity: number;
-    feePrice: number;
-    baseUsdPrice: number;
+    feeUsdPrice: number;
     feeTotal: number;
     subTotal: number;
     total: number;
@@ -29,7 +29,7 @@ export interface Order {
     quoteUsdPrice: number;
     feeCurrency: string;
     feeQuantity: number;
-    feePrice: number;
+    feeUsdPrice: number;
     feeTotal: number;
     subTotal: number;
     total: number;
