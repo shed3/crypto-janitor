@@ -1,5 +1,5 @@
 import { CcxtConnection } from "../target.types";
-
+import { Kucoin } from ".";
 /**
  * A Bittrex Implementation of ccxtConnection
  */
@@ -14,6 +14,7 @@ export default class Bittrex extends CcxtConnection {
             rateLimit: 500,
             requireSymbols: false,
             requireUsdValuation: true,
+            fallback: Kucoin,
         });
     }
 }

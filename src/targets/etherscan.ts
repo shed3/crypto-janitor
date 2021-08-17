@@ -29,7 +29,6 @@ export default class Etherscan extends BaseConnection {
         kraken: new ccxtConnection("kraken"),
         okcoin: new ccxtConnection("okcoin"),
         poloniex: new ccxtConnection("poloniex"),
-        yobit: new ccxtConnection("yobit"),
     };
 
     /**
@@ -86,24 +85,26 @@ export default class Etherscan extends BaseConnection {
             exclude.push(this.currentDataSource.name);
         }
 
-        const fallbacks: Array<string> = this.fallbackDataSources.filter(
+        const fallbackSources: Array<string> = this.fallbackDataSources.filter(
             (src: string) => !exclude.includes(src)
         );
-        for (let x = 0; x < fallbacks.length; x++) {
-            attempted.push(fallbacks[x]);
-            await this.availableDataSources[fallbacks[x]].initialize();
-            if (
-                this.availableDataSources[fallbacks[x]].getQuoteConversion(
-                    symbol
-                ).length > 0
-            ) {
+        const fallbacks: Array<ccxtConnection> = fallbackSources.map(
+            (fallback: string) => this.availableDataSources[fallback]
+        );
+        for (const fallback of fallbacks) {
+            attempted.push(fallback.name);
+            await fallback.initialize();
+            const quotes: Array<string> = await fallback.getQuoteConversion(
+                symbol
+            );
+            if (quotes.length > 0) {
                 return {
-                    dataSource: this.availableDataSources[fallbacks[x]],
+                    dataSource: fallback,
                     attempted,
                 };
             } else {
                 console.log(
-                    `MARKET NOT FOUND: Could not find ${symbol} on ${fallbacks[x]}.`
+                    `MARKET NOT FOUND: Could not find ${symbol} on ${fallback.name}.`
                 );
             }
         }
