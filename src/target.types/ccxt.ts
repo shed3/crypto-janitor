@@ -92,15 +92,14 @@ export default class ccxtConnection extends BaseConnection {
             baseUsdPrice: 0,
             feeCurrency: transaction.fee ? transaction.fee.currency : "USD",
             feeQuantity: fee,
-            feePrice: 0,
+            feeUsdPrice: 0,
             feeTotal: 0,
             subTotal: 0,
             total: 0,
         };
         if (!this.requireUsdValuation) {
-            formatted.feePrice =
-                formatted.feeCurrency === "USD" ? formatted.feeQuantity : 0;
-            formatted.feeTotal = formatted.feePrice * formatted.feeQuantity;
+            formatted.feeUsdPrice =
+                formatted.feeCurrency === "USD" ? 1 : formatted.feeUsdPrice;
             formatted.subTotal = transaction.amount;
             formatted.total = transaction.amount + fee;
         }
@@ -118,7 +117,7 @@ export default class ccxtConnection extends BaseConnection {
         const feeCurrency: string = order.fee ? order.fee.currency : "USD";
         const price: number = order.price ? order.price : order.average;
         const [baseCurrency, quoteCurrency] = order.symbol.split("/");
-        // const baseQuantity: number = order.filled;
+        // use fill as default value with amount as fallback
         const baseQuantity: number = !isNaN(order.filled)
             ? order.filled
             : order.amount;
@@ -137,15 +136,12 @@ export default class ccxtConnection extends BaseConnection {
             quoteUsdPrice: 0,
             feeCurrency: feeCurrency,
             feeQuantity: fee,
-            feePrice: this.stableCurrencies.includes(feeCurrency) ? 1 : 0,
+            feeUsdPrice: 0,
             feeTotal: 0,
             subTotal: 0,
             total: 0,
         };
-        if (
-            !this.requireUsdValuation ||
-            this.stableCurrencies.includes(quoteCurrency)
-        ) {
+        if (!this.requireUsdValuation || quoteCurrency === "USD") {
             formatted.subTotal = order.cost;
             formatted.total =
                 order.side === "buy" ? order.cost + fee : order.cost - fee;
@@ -153,7 +149,9 @@ export default class ccxtConnection extends BaseConnection {
             formatted.baseUsdPrice = quoteQuantity / baseQuantity;
             // formatted.quotePrice = formatted.baseUsdPrice / formatted.quoteUsdPrice;
             if (formatted.feeCurrency === formatted.quoteCurrency) {
-                formatted.feeTotal = formatted.feePrice * formatted.feeQuantity;
+                formatted.feeUsdPrice = formatted.quoteUsdPrice;
+                formatted.feeTotal =
+                    formatted.feeUsdPrice * formatted.feeQuantity;
             }
         }
         return formatted;
@@ -556,18 +554,6 @@ export default class ccxtConnection extends BaseConnection {
         const price: number = await this.getQuote(symbol, timestamp);
         const prices: any = {};
 
-        // Fetch fee price if neccessary
-        if (feeCurrency === symbol) {
-            prices.feePrice = price;
-        } else if (feeCurrency) {
-            if (this.stableCurrencies.includes(feeCurrency)) {
-                prices.feePrice = 1;
-            } else if (feeCurrency) {
-                prices.feePrice = await this.getQuote(feeCurrency, timestamp);
-            }
-        } else {
-            prices.feePrice = 0;
-        }
         if (symbol === baseCurrency) {
             prices.baseUsdPrice = price;
         } else if (symbol === quoteCurrency) {
@@ -576,6 +562,23 @@ export default class ccxtConnection extends BaseConnection {
                 prices.baseUsdPrice = prices.quoteUsdPrice * quotePrice;
             }
         }
+
+        // Fetch fee price if neccessary
+        if (feeCurrency) {
+            if (feeCurrency === "USD") {
+                prices.feeUsdPrice = 1;
+            } else if (feeCurrency === baseCurrency) {
+                prices.feeUsdPrice = prices.baseUsdPrice;
+            } else if (feeCurrency === quoteCurrency) {
+                prices.feeUsdPrice = prices.quoteUsdPrice;
+            } else {
+                prices.feeUsdPrice = await this.getQuote(
+                    feeCurrency,
+                    timestamp
+                );
+            }
+        }
+
         return prices;
     }
 
@@ -598,12 +601,12 @@ export default class ccxtConnection extends BaseConnection {
             );
         }
         tx.baseUsdPrice = prices.baseUsdPrice;
-        tx.feePrice = prices.feePrice;
+        tx.feeUsdPrice = prices.feeUsdPrice;
 
         // Update totals
-        tx.feeTotal = tx.feePrice * tx.feeQuantity;
+        tx.feeTotal = tx.feeUsdPrice * tx.feeQuantity;
         tx.subTotal = tx.baseQuantity * tx.baseUsdPrice;
-        tx.total = tx.subTotal + tx.feePrice * tx.feeQuantity;
+        tx.total = tx.subTotal + tx.feeUsdPrice * tx.feeQuantity;
         return tx;
     }
 
@@ -625,11 +628,11 @@ export default class ccxtConnection extends BaseConnection {
             );
         }
         order.baseUsdPrice = prices.baseUsdPrice;
-        order.feePrice = prices.feePrice;
+        order.feeUsdPrice = prices.feeUsdPrice;
         order.quoteUsdPrice = prices.quoteUsdPrice;
 
         // Update totals
-        order.feeTotal = order.feePrice * order.feeQuantity;
+        order.feeTotal = order.feeUsdPrice * order.feeQuantity;
         order.subTotal = order.baseQuantity * order.baseUsdPrice;
         order.total =
             order.type === "buy"

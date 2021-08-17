@@ -134,7 +134,7 @@ export default class Etherscan extends BaseConnection {
             feeQuantity:
                 web3.utils.toBN(entryGroup[0].gasUsed) *
                 web3.utils.fromWei(entryGroup[0].gasPrice),
-            feePrice: 0,
+            feeUsdPrice: 0,
             feeTotal: 0,
             subTotal: 0,
             total: 0,
