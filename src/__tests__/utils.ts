@@ -11,7 +11,7 @@ export const checkTxFields = (tx: Transaction) => {
         "baseUsdPrice",
         "feeCurrency",
         "feeQuantity",
-        "feePrice",
+        "feeUsdPrice",
         "feeTotal",
         "subTotal",
         "total"
@@ -38,7 +38,7 @@ export const checkOrderFields = (order: Order) => {
         "quoteUsdPrice",
         "feeCurrency",
         "feeQuantity",
-        "feePrice",
+        "feeUsdPrice",
         "feeTotal",
         "subTotal",
         "total"
