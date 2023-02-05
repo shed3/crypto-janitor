@@ -39,7 +39,7 @@
   "dependencies": {
     "@knapsack-pro/jest": "^5.2.0",
     "ccxt": "^1.47.95",
-    "celsius-sdk": "^0.10.15",
+    "celsius-sdk": "^1.0.0",
     "etherscan-api": "^10.0.5",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.21",
     "@types/jest": "^26.0.24",
-    "@types/lodash": "^4.14.171",
+    "@types/lodash": "^4.14.185",
     "@types/papaparse": "^5.2.6",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
     "@typescript-eslint/parser": "^4.28.4",

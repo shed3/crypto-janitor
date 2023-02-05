@@ -97,6 +97,7 @@ export const resolveConnection = async (
         }
         switch (params.chain) {
             case "ethereum":
+                console.log("Etherscan", JSON.stringify(params));
                 connection = new Etherscan(params.address, params.apiKey);
                 break;
             default:
@@ -131,7 +132,7 @@ export const resolveConnection = async (
     try {
         await connection.initialize();
         return { status: "success", connection };
-    } catch (error) {
+    } catch (error: any) {
         return { status: "failure", error: error.message };
     }
 };

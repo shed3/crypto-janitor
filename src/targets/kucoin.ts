@@ -5,6 +5,7 @@ import * as _ from "lodash";
  * A Kucoin Implementation of ccxtConnection
  */
 export default class Kucoin extends CcxtConnection {
+    pausedForRateLimit: boolean = false;
     /**
      * @description Create Kucoin instance
      * @param {any} creds - Kucoin API creds
@@ -52,7 +53,7 @@ export default class Kucoin extends CcxtConnection {
                 const trades = super.getOrders(symbol, fetchTime, 200);
                 allTransactions.push(trades);
                 fetchTime = fetchTime + 604800000;
-            } catch (e) {
+            } catch (e: any) {
                 console.log(e.message);
                 break;
             }
@@ -60,5 +61,48 @@ export default class Kucoin extends CcxtConnection {
         let results = await Promise.all(allTransactions);
         results = _.sortBy(_.flatten(results), "timestamp");
         return results;
+    }
+
+    /**
+     * @description Get price of an asset at a given time
+     * @param {string} symbol Currency symbol
+     * @param {number} timestamp Timestamp to get price at
+     * @return {Promise<number>} Price of asset in USD
+     */
+    async getQuote(symbol: string, timestamp: number): Promise<number> {
+        let attempts = 0;
+        let quote = 0;
+        while (attempts < 10) {
+            if (this.pausedForRateLimit) continue;
+            try {
+                quote = await super.getQuote(symbol, timestamp);
+                console.log("GOT QUOTE");
+                break;
+            } catch (e: any) {
+                if (e.message.includes("429")) {
+                    if (!this.pausedForRateLimit) {
+                        console.log("Rate limit hit, waiting 10 seconds");
+                        this.pausedForRateLimit = true;
+                        setTimeout(
+                            () => this._unlockRateLimitMutex.bind(this),
+                            5000
+                        );
+                    }
+                    attempts++;
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return quote;
+    }
+
+    /**
+     * @description Set Mutex Lock for rate limit
+     * @param {number} timestamp Timestamp to get price at
+     */
+    _unlockRateLimitMutex() {
+        console.log("Rate limit mutex released");
+        this.pausedForRateLimit = false;
     }
 }

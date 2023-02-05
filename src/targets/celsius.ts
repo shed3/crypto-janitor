@@ -1,6 +1,7 @@
 import { BaseConnection, Transaction } from "../target.types";
 import { Celsius as celsius, AUTH_METHODS, ENVIRONMENT } from "celsius-sdk";
 import * as _ from "lodash";
+import { sleep } from "../utils";
 
 /**
  * A Celsius Implementation of BaseConnection
@@ -167,20 +168,9 @@ export default class CelsiusConnection extends BaseConnection {
             this.credentials.apiKey
         );
         const numPages: number = initialPage.pagination.pages;
-        let currentPage: number = 2;
         const allPages = [];
-        while (currentPage <= numPages) {
-            try {
-                const newPage = this.connection.getTransactionSummary(
-                    { page: currentPage, perPage: 20 },
-                    this.credentials.apiKey
-                );
-                allPages.push(newPage);
-                currentPage = currentPage + 1;
-            } catch (e) {
-                console.log(e.message);
-                break;
-            }
+        for (let i = 2; i <= numPages; i++) {
+            allPages.push(this._getTxPage(i));
         }
         let results = await Promise.all(allPages);
         results = results.map((x: any) => x.record);
@@ -211,5 +201,28 @@ export default class CelsiusConnection extends BaseConnection {
      */
     async getAllTransactions(since?: number): Promise<any> {
         return await this.filterTransactions(undefined, undefined, since);
+    }
+
+    /**
+     * Helper function to fetch Celsius transaction page
+     * @param {number} pageNum  Page number to fetch
+     * @return {Array<any>} Array of transaction objects
+     */
+    async _getTxPage(pageNum: number): Promise<any> {
+        let attempts = 0;
+        let page = { record: [] };
+        while (attempts < 5) {
+            try {
+                page = await this.connection.getTransactionSummary(
+                    { page: pageNum, perPage: 20 },
+                    this.credentials.apiKey
+                );
+                break;
+            } catch (e) {
+                await sleep(1000);
+                attempts++;
+            }
+        }
+        return page;
     }
 }

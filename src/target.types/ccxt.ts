@@ -23,7 +23,7 @@ interface ExchangeCredentials {
 export function getExchange(
     name: string,
     creds?: ExchangeCredentials,
-    rateLimit: number = 1000
+    rateLimit: number = 12000
 ): ccxt.Exchange {
     const exchanges: any = {
         // public or private access
@@ -429,7 +429,8 @@ export default class ccxtConnection extends BaseConnection {
                             allTransactions =
                                 allTransactions.concat(transactions);
                             break;
-                        } catch (e) {
+                        } catch (e: any) {
+                            console.log(`GOT ${this.connection.name} ERROR`, e);
                             if (
                                 catchErrors.some(
                                     (error: any) => e instanceof error
